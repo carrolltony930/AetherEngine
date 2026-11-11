@@ -93,7 +93,7 @@ final class SampleBufferRenderer: @unchecked Sendable {
     func setArrivalOrderHandover(frameRate: Double?) {
         reorderLock.lock()
         defer { reorderLock.unlock() }
-        if #available(visionOS 1.1, *), let rate = frameRate, Self.arrivalOrderFrameRates.contains(rate) {
+        if #available(iOS 17.4, tvOS 17.4, visionOS 1.1, *), let rate = frameRate, Self.arrivalOrderFrameRates.contains(rate) {
             arrivalFloor = PresentationFloor(interval: 1 / rate)
         } else {
             arrivalFloor = nil
@@ -653,7 +653,7 @@ final class SampleBufferRenderer: @unchecked Sendable {
     /// which is a compile error rather than a runtime nil.
     @MainActor
     func loadRenderMetrics() async -> RenderMetrics? {
-        guard #available(visionOS 1.1, *) else { return nil }
+        guard #available(iOS 17.4, tvOS 17.4, visionOS 1.1, *) else { return nil }
         let renderer = videoRenderer
         return await withCheckedContinuation { (cont: CheckedContinuation<RenderMetrics?, Never>) in
             renderer.loadVideoPerformanceMetrics { m in
@@ -897,7 +897,7 @@ final class SampleBufferRenderer: @unchecked Sendable {
 
         flushFrame(pixelBuffer: pixelBuffer, pts: pts, hdr10PlusData: hdr10PlusData,
                    displayOrderSpacing: step.contiguous)
-        if let raised = step.raisedFloor, #available(visionOS 1.1, *) {
+        if let raised = step.raisedFloor, #available(iOS 17.4, tvOS 17.4, visionOS 1.1, *) {
             let source = CMTime(seconds: raised, preferredTimescale: 90_000)
             // A flush in between dropped this promise along with the frames it covered; setting it
             // now would hold the first frame of a backward seek below a pre-seek floor.
@@ -969,7 +969,7 @@ final class SampleBufferRenderer: @unchecked Sendable {
         reorderLock.lock()
         // Arrival order: nothing is held, but a hole in the last GOP would leave the promise below
         // the tail with no further frame to move it.
-        if arrivalFloor != nil, #available(visionOS 1.1, *) {
+        if arrivalFloor != nil, #available(iOS 17.4, tvOS 17.4, visionOS 1.1, *) {
             videoRenderer.presentationTimeExpectation = .none
         }
         let remaining = reorderBuffer
