@@ -28,7 +28,7 @@ enum AudioRouteDescription {
         let session = AVAudioSession.sharedInstance()
         let ports = session.currentRoute.outputs.map(portDescription).joined(separator: ", ")
         return "output=\(session.outputNumberOfChannels) preferred=\(session.preferredOutputNumberOfChannels) "
-            + "max=\(session.maximumOutputNumberOfChannels) rendering=\(renderingModeName(session.renderingMode)) "
+            + "max=\(session.maximumOutputNumberOfChannels) rendering=\(renderingModeDescription(session)) "
             + "multichannelContent=\(session.supportsMultichannelContent) ports=[\(ports)] "
             + "latency=\(String(format: "%.0f", session.outputLatency * 1000))ms "
             + "io=\(String(format: "%.1f", session.ioBufferDuration * 1000))ms"
@@ -48,6 +48,12 @@ enum AudioRouteDescription {
         return "\(port.portType.rawValue)[\(fields.joined(separator: ", "))]"
     }
 
+    private static func renderingModeDescription(_ session: AVAudioSession) -> String {
+        if #available(iOS 17.2, tvOS 17.2, *) { return renderingModeName(session.renderingMode) }
+        return "n/a"
+    }
+
+    @available(iOS 17.2, tvOS 17.2, *)
     static func renderingModeName(_ mode: AVAudioSession.RenderingMode) -> String {
         switch mode {
         case .notApplicable: return "notApplicable"
@@ -76,12 +82,19 @@ enum AudioRouteDescription {
             guard let route = current() else { return }
             EngineLog.emit("[AetherEngine] audioRoute changed reason=\(reason) \(route)", category: .engine)
         }
-        for (name, what) in [(AVAudioSession.renderingModeChangeNotification, "rendering mode"),
-                             (AVAudioSession.renderingCapabilitiesChangeNotification, "rendering capabilities"),
-                             (AVAudioSession.spatialPlaybackCapabilitiesChangedNotification, "spatial playback")] {
-            _ = NotificationCenter.default.addObserver(forName: name, object: session, queue: nil) { _ in
-                guard let route = current() else { return }
-                EngineLog.emit("[AetherEngine] audioRoute \(what) changed \(route)", category: .engine)
+        _ = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.spatialPlaybackCapabilitiesChangedNotification, object: session, queue: nil
+        ) { _ in
+            guard let route = current() else { return }
+            EngineLog.emit("[AetherEngine] audioRoute spatial playback changed \(route)", category: .engine)
+        }
+        if #available(iOS 17.2, tvOS 17.2, *) {
+            for (name, what) in [(AVAudioSession.renderingModeChangeNotification, "rendering mode"),
+                                 (AVAudioSession.renderingCapabilitiesChangeNotification, "rendering capabilities")] {
+                _ = NotificationCenter.default.addObserver(forName: name, object: session, queue: nil) { _ in
+                    guard let route = current() else { return }
+                    EngineLog.emit("[AetherEngine] audioRoute \(what) changed \(route)", category: .engine)
+                }
             }
         }
     }()
