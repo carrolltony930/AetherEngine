@@ -146,5 +146,8 @@ let package = Package(
             dependencies: ["AetherEngineSMB"],
             path: "Tests/AetherEngineSMBTests"
         ),
-    ]
+    ],
+    // 宿主 App 最低支持 iOS 17.0：按 Swift 5 语言模式编译，
+    // 避免 Swift 6 严格并发检查把 AVFoundation 的非 Sendable 返回值当成错误。
+    swiftLanguageModes: [.v5]
 )
