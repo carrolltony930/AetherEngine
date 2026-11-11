@@ -278,7 +278,7 @@ final class SoftwarePlaybackHost {
     /// `stop()` flushes it, so the engine can hold it over the new host's startup. Falls back to the
     /// newest frame enqueued, which a layer that is not on screen is all there is of.
     func displayedFrame() -> CVPixelBuffer? {
-        if #available(visionOS 1.1, *),
+        if #available(iOS 17.4, tvOS 17.4, visionOS 1.1, *),
            let shown = renderer.displayLayer.sampleBufferRenderer.displayedPixelBuffer() {
             return shown
         }
@@ -900,7 +900,7 @@ final class SoftwarePlaybackHost {
     /// visionOS floor, which is 1.0, and that is a compile error rather than a runtime fallback.
     private func armReadyForDisplayObserver() {
         disarmReadyForDisplayObserver()
-        guard #available(visionOS 1.1, *) else { return }
+        guard #available(iOS 17.4, tvOS 17.4, visionOS 1.1, *) else { return }
         let layer = renderer.displayLayer
         readyForDisplayObserver = NotificationCenter.default.addObserver(
             forName: .AVSampleBufferDisplayLayerReadyForDisplayDidChange,
@@ -4945,7 +4945,7 @@ final class SoftwarePlaybackHost {
             let r4d: String
             // #344: `*` is visionOS's declared floor (1.0), not "anything newer", and
             // isReadyForDisplay arrived in 1.1. Name the platform or the visionOS build breaks.
-            if #available(visionOS 1.1, *) {
+            if #available(iOS 17.4, tvOS 17.4, visionOS 1.1, *) {
                 r4d = layer.isReadyForDisplay ? "y" : "n"
             } else {
                 r4d = "-"
